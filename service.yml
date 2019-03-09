@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Simple random service. Version 1.0.0
+Parameters:
+  dockerImageTag:
+    Type: String
+    Description: Enter docker image tag
+    Default: latest
+  serviceDesiredCount:
+    Type: Number
+    Description: Enter tasks desired count
+    Default: 2
+    MinValue: 1
+  MinCapacity:
+    Type: Number
+    Description: Minimum number of tasks in service
+    Default: 1
+    MinValue: 1
+  MaxCapacity:
+    Type: Number
+    Description: Maximum mumber of tasks in service
+    Default: 4
+    MinValue: 2
+  containerMemoryReservation:
+    Type: Number
+    Description: Memory reservation for one task
+    Default: 64
+    AllowedValues:
+      - 32
+      - 64
+      - 96
+      - 128
+      - 160
+      - 192
+      - 256
+      - 224
+  containerMemoryLimit:
+    Type: Number
+    Description: Memory limit for task
+    Default: 96
+    AllowedValues:
+      - 64
+      - 96
+      - 128
+      - 160
+      - 192
+      - 256
+      - 224
+      - 256
+  containerCpuReservation:
+    Type: Number
+    Description: CPU Reservation for one task
+    Default: 24
+    AllowedValues:
+      - 0
+      - 8
+      - 16
+      - 24
+      - 32
+      - 48
+      - 64
+Resources:
+  taskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      TaskRoleArn: !ImportValue 

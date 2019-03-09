@@ -1,0 +1,15 @@
+services:
+  - docker
+
+before_install:
+  - commits_hash=$(git rev-parse --verify HEAD)
+
+jobs:
+  include:
+    - stage: build
+      script: 
+        - docker build -t ${dockerhub_account}/simple_random_app:${commits_hash} .
+        - docker login --username ${dockerhub_account} --password ${dockerhub_password}
+        - docker push ${dockerhub_account}/simple_random_app:${commits_hash}
+      stage: deploy
+      if: branch = master
