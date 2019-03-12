@@ -15,7 +15,7 @@ jobs:
         - docker build -t ${dockerhub_account}/simple_random_app:${commits_hash} .
         - docker login --username ${dockerhub_account} --password ${dockerhub_password}
         - docker push ${dockerhub_account}/simple_random_app:${commits_hash}
-      stage: deploy
+    - stage: deploy
       if: branch = master
       script:
         - python .travis_scripts/deploy_service.py --stack-name=simple-random-application --template=service.yml --docker-image-tag=${commits_hash} --dockerhub-repo-name=${docker_repository}
