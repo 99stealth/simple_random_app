@@ -24,6 +24,7 @@ def follow_cfn_stack(client, stack_name, try_timeout):
                 exit(0)
             else:
                 print ("Current stack is {0}. Exit with error".format(stack["StackStatus"]))
+                exit(1)
 
 def stack_operations(client, stack_name, template, try_timeout, docker_image_tag, dockerhub_repo_name, operation):
     if operation == "create":
