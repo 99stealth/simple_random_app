@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Simple random service. Version 1.0.0
 Parameters:
+  dockerhubRepositoryName:
+    Type: String
+    Description: Enter dockerhub repository name
   dockerImageTag:
     Type: String
     Description: Enter docker image tag
@@ -10,16 +13,6 @@ Parameters:
     Description: Enter tasks desired count
     Default: 2
     MinValue: 1
-  MinCapacity:
-    Type: Number
-    Description: Minimum number of tasks in service
-    Default: 1
-    MinValue: 1
-  MaxCapacity:
-    Type: Number
-    Description: Maximum mumber of tasks in service
-    Default: 4
-    MinValue: 2
   containerMemoryReservation:
     Type: Number
     Description: Memory reservation for one task
@@ -62,4 +55,65 @@ Resources:
   taskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      TaskRoleArn: !ImportValue 
+      TaskRoleArn: !ImportValue simple-ecs-task-execution-role
+      Family: simple-random-service
+      ContainerDefinitions:
+        -
+          Name: simple-random-service
+          Image: !Sub ${dockerhubRepositoryName}:${dockerImageTag}
+          MemoryReservation: !Ref containerMemoryReservation
+          Memory: !Ref containerMemoryLimit
+          Cpu: !Ref containerCpuReservation
+          Essential: true
+          PortMappings:
+            -
+              HostPort: 0
+              Protocol: tcp
+              ContainerPort: 8000
+  targetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: "/health-check"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Name: simple-random-app
+      Port: 80
+      Protocol: "HTTP"
+      TargetGroupAttributes:
+        -
+          Key: "deregistration_delay.timeout_seconds"
+          Value: "60"
+      VpcId: !ImportValue simple-vpc     
+  service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !ImportValue simple-cluster-logical-id
+      ServiceName: simple-random-service
+      DesiredCount: !Ref serviceDesiredCount
+      LoadBalancers:
+        - 
+          ContainerName: simple-random-service
+          ContainerPort: 8000
+          TargetGroupArn: !Ref targetGroup
+      Role: !ImportValue simple-ecs-service-role
+      TaskDefinition: !Ref taskDefinition
+      PlacementStrategies:
+        - Field: "attribute:ecs.availability-zone"
+          Type: "spread"
+        - Field: "instanceId"
+          Type: "spread"
+      HealthCheckGracePeriodSeconds: 15
+  albListenersRulePort80:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref 'targetGroup'
+      Conditions:
+      - Field: path-pattern
+        Values: [/api/random-number]
+      ListenerArn: !ImportValue 'simple-alb-listener-port-80'
+      Priority: 1
