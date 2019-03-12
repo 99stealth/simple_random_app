@@ -13,3 +13,4 @@ jobs:
         - docker push ${dockerhub_account}/simple_random_app:${commits_hash}
       stage: deploy
       if: branch = master
+        - python .travis_scripts/deploy_service.py --stack-name=simple-random-application --template=service.yml --docker-image-tag=${commits_hash} --dockerhub-repo-name=${docker_repository}
