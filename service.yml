@@ -89,6 +89,7 @@ Resources:
       VpcId: !ImportValue simple-vpc     
   service:
     Type: AWS::ECS::Service
+    DependsOn: albListenersRulePort80
     Properties:
       Cluster: !ImportValue simple-cluster-logical-id
       ServiceName: simple-random-service
@@ -120,7 +121,7 @@ Resources:
   taskFailEventRule:
     Type: "AWS::Events::Rule"
     Properties:
-      Name: !Sub simple-ecs-task-fail
+      Name: simple-ecs-task-fail
       Description: "Rule which keeps record of task exit events"
       EventPattern: !Sub 
         - | 

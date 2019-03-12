@@ -13,8 +13,8 @@ def stack_exists(client, stack_name):
     return False
 
 def follow_cfn_stack(client, stack_name, try_timeout):
-    cfn_stacks = client.describe_stacks(StackName=stack_name)
     while True:
+        cfn_stacks = client.describe_stacks(StackName=stack_name)
         for stack in cfn_stacks["Stacks"]:
             if "IN_PROGRESS" in stack["StackStatus"] and "ROLLBACK" not in stack["StackStatus"] and "DELETE" not in stack["StackStatus"]:
                 print ("Current stack status: {0}. Waiting {1} seconds".format(stack["StackStatus"], try_timeout))
@@ -29,6 +29,7 @@ def follow_cfn_stack(client, stack_name, try_timeout):
 def stack_operations(client, stack_name, template, try_timeout, docker_image_tag, dockerhub_repo_name, operation):
     if operation == "create":
         with open(template, 'r') as cfn_template:
+            #TODO try except
             client.create_stack(StackName=stack_name,
                                 TemplateBody=cfn_template.read(),
                                 Parameters=[
