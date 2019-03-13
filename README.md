@@ -4,8 +4,7 @@ This project is created only for educational purposes. Feal free to to fork and 
 
 ## Before you start
 Before you run deploy of the application you need to prepare the infrastructure. You can automatically deploy it using [Simple infrastructure repository](https://github.com/99stealth/simple-infrastructure "Simple Infrastructure")
-<aside class="notice">
-Pay attention! You can't deploy this application without the AWS ECS infrastructure
-</aside>
+
+:exclamation: Pay attention! You can't deploy this application without the AWS ECS infrastructure
 
 ## Build the application
