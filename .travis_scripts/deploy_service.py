@@ -91,19 +91,19 @@ def stack_operations(client, stack_name, template, try_timeout, docker_image_tag
     elif operation == "update":
         with open(template, 'r') as cfn_template:
             try:
-                return client.update_stack(StackName=stack_name,
-                                           TemplateBody=cfn_template.read(),
-                                           Parameters=[
-                                             {
-                                               'ParameterKey': 'dockerhubRepositoryName',
-                                               'ParameterValue': dockerhub_repo_name,
-                                             },
-                                             {
-                                               'ParameterKey': 'dockerImageTag',
-                                               'ParameterValue': docker_image_tag,
-                                             }
-                                           ]
-                                          )
+                client.update_stack(StackName=stack_name,
+                                    TemplateBody=cfn_template.read(),
+                                    Parameters=[
+                                      {
+                                        'ParameterKey': 'dockerhubRepositoryName',
+                                        'ParameterValue': dockerhub_repo_name,
+                                      },
+                                      {
+                                        'ParameterKey': 'dockerImageTag',
+                                        'ParameterValue': docker_image_tag,
+                                      }
+                                    ]
+                                   )
             except ClientError as e:
                 print ("[Skipping stack update] {0}".format(e))
         follow_cfn_stack(client, stack_name, try_timeout)
@@ -124,10 +124,9 @@ def main():
     args = get_arguments()
     client = boto3.client('cloudformation')
     if stack_exists(client, args.stack_name):
-        status = stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="update")
+        stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="update")
     else:
-        status = stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="create")
-    print (status)
+        stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="create")
         
 
 if __name__ == "__main__":
