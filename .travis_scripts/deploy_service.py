@@ -12,6 +12,20 @@ def stack_exists(client, stack_name):
             return True
     return False
 
+def find_alarm_in_output(client, stack_name):
+    alarms_list = []
+    outputs = client.describe_stacks(StackName=stack_name)['Stacks'][0]['Outputs']
+    for output in outputs:
+        if 'Alarm' in output['OutputKey']:
+            alarms_list.append(output['OutputValue'])
+    return alarms_list
+
+def generate_rollback_trigers(alarms):
+    rollback_trigers = []
+    for alarm in alarms:
+        rollback_trigers.append({ 'Arn': alarm, 'Type': 'AWS::CloudWatch::Alarm' })
+    return rollback_trigers
+
 def follow_cfn_stack(client, stack_name, try_timeout):
     while True:
         cfn_stacks = client.describe_stacks(StackName=stack_name)
@@ -20,31 +34,60 @@ def follow_cfn_stack(client, stack_name, try_timeout):
                 print ("Current stack status: {0}. Waiting {1} seconds".format(stack["StackStatus"], try_timeout))
                 sleep(try_timeout)
             elif "COMPLETE" in stack["StackStatus"] and "DELETE" not in stack["StackStatus"]:
-                print ("Current stack is {0}".format(stack["StackStatus"]))
-                exit(0)
+                print ("Stack {0}".format(stack["StackStatus"]))
+                return True
             else:
                 print ("Current stack is {0}. Exit with error".format(stack["StackStatus"]))
-                exit(1)
+                return False
 
 def stack_operations(client, stack_name, template, try_timeout, docker_image_tag, dockerhub_repo_name, operation):
     if operation == "create":
         with open(template, 'r') as cfn_template:
-            #TODO try except
-            client.create_stack(StackName=stack_name,
-                                TemplateBody=cfn_template.read(),
-                                Parameters=[
-                                  {
-                                    'ParameterKey': 'dockerhubRepositoryName',
-                                    'ParameterValue': dockerhub_repo_name,
-                                  },
-                                  {
-                                    'ParameterKey': 'dockerImageTag',
-                                    'ParameterValue': docker_image_tag,
-                                  }
-                                ]
-                                )
-        follow_cfn_stack(client, stack_name, try_timeout)
+            try:
+                client.create_stack(StackName=stack_name,
+                                    TemplateBody=cfn_template.read(),
+                                    Parameters=[
+                                      {
+                                        'ParameterKey': 'dockerhubRepositoryName',
+                                        'ParameterValue': dockerhub_repo_name,
+                                      },
+                                      {
+                                        'ParameterKey': 'dockerImageTag',
+                                        'ParameterValue': docker_image_tag,
+                                      }
+                                    ]
+                                    )
+            except ClientError as e:
+                print ("[Skipping stack create] {0}".format(e))
+        if not follow_cfn_stack(client, stack_name, try_timeout):
+            exit(1)
 
+        alarms = find_alarm_in_output(client, stack_name)
+        if alarms:
+            print ("Alarms detected. Stack update will be performed")
+            rollback_trigers = generate_rollback_trigers(alarms)
+            try:
+                client.update_stack(StackName=stack_name,
+                                    UsePreviousTemplate=True,
+                                    Parameters=[
+                                      {
+                                          'ParameterKey': 'dockerhubRepositoryName',
+                                          'ParameterValue': dockerhub_repo_name,
+                                      },
+                                      {
+                                          'ParameterKey': 'dockerImageTag',
+                                          'ParameterValue': docker_image_tag,
+                                      }
+                                    ],
+                                    RollbackConfiguration={
+                                            'RollbackTriggers': rollback_trigers,
+                                            'MonitoringTimeInMinutes': 3
+                                        }
+                                    )
+            except ClientError as e:
+                print ("[Skipping stack update] {0}".format(e))
+            if not follow_cfn_stack(client, stack_name, try_timeout):
+                exit(1)
     elif operation == "update":
         with open(template, 'r') as cfn_template:
             try:
@@ -60,7 +103,7 @@ def stack_operations(client, stack_name, template, try_timeout, docker_image_tag
                                                'ParameterValue': docker_image_tag,
                                              }
                                            ]
-                                           )
+                                          )
             except ClientError as e:
                 print ("[Skipping stack update] {0}".format(e))
         follow_cfn_stack(client, stack_name, try_timeout)
