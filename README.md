@@ -27,6 +27,9 @@ Continuous integration and deployment process for current project is running on 
   - `docker_repository` - your DockerHub repository where you are going to store built docker images
 - Now run the build and enjoy the automation
 
+## Rollback
+When you deploy service at first time it creates the CloudWatch Event which allows to listen the for `Essential container in task exited` and sets an Alarm as a `Rollback Trigger` to current CFn stack. If the number of tasks exited tasks from updated task definition will be greater than 2 per 1 minute then rollback will be triggered.
+
 ## Changes in source code
 It is obviously that you may want to make some changes in source code or other components. So, here are several things that you should know:
 - After you make a `git push` build will be trigered
