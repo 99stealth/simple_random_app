@@ -118,7 +118,7 @@ Resources:
         Values: [/api/random-number]
       ListenerArn: !ImportValue 'simple-alb-listener-port-80'
       Priority: 1
-  taskFailEventRule:
+  taskEssentialExitEventRule:
     Type: "AWS::Events::Rule"
     Properties:
       Name: simple-ecs-task-fail
@@ -141,10 +141,10 @@ Resources:
         - ecsCluster: 
             Fn::ImportValue: simple-cluster-logical-id
       State: ENABLED
-  TaskFailAlarm:
+  taskEssentialExitAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: simple-ecs-task-fail-alarm
+      AlarmName: simple-ecs-task-essential-exit-alarm
       EvaluationPeriods: 1
       Statistic: Sum
       Threshold: 2
@@ -153,11 +153,54 @@ Resources:
       Namespace: AWS/Events
       Dimensions:
       - Name: RuleName
-        Value: !Ref taskFailEventRule
+        Value: !Ref taskEssentialExitEventRule
       ComparisonOperator: GreaterThanOrEqualToThreshold
       MetricName: TriggeredRules
+  taskFailedHealthCheckEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: simple-ecs-task-fail
+      Description: "Rule which keeps record of task exit events"
+      EventPattern: !Sub 
+        - | 
+            {
+              "source": [
+                "aws.ecs"
+              ],
+              "detail-type": [
+                "ECS Task State Change"
+              ],
+              "detail": {
+                "clusterArn": ["arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ecsCluster}"],
+                "taskDefinitionArn": ["${taskDefinition}"],
+                "stoppedReason": ["Task failed ELB health checks in (target-group ${targetGroupLbArns})"]
+              }
+            }
+        - ecsCluster: 
+            Fn::ImportValue: simple-cluster-logical-id
+          targetGroupLbArns:
+            !Ref targetGroup
+      State: ENABLED
+  taskFailedHealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: simple-ecs-healthcheck-fail-alarm
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Threshold: 2
+      AlarmDescription: Alarm if task healt check failed 2 times per minute
+      Period: 60
+      Namespace: AWS/Events
+      Dimensions:
+      - Name: RuleName
+        Value: !Ref taskFailedHealthCheckEventRule
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      MetricName: TriggeredRules
+      
 Outputs:
   ECSService:
     Value: !GetAtt service.Name
-  TaskFailAlarmArn:
-    Value: !GetAtt TaskFailAlarm.Arn
+  taskEssentialExitAlarm:
+    Value: !GetAtt taskEssentialExitAlarm.Arn
+  taskFailedHealthCheck:
+    Value: !GetAtt taskFailedHealthCheckAlarm.Arn
