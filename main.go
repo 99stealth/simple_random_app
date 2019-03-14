@@ -48,7 +48,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Router Handler / Endpoints
-	r.HandleFunc("/health-check", getHealthStatus).Methods("GET")
+	r.HandleFunc("/health", getHealthStatus).Methods("GET")
 	r.HandleFunc("/api/random-number", getRandomNumber).Methods("POST")
 
 	fmt.Println("Starting web server on port " + strconv.Itoa(serverPort))
