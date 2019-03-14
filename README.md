@@ -30,10 +30,12 @@ Continuous integration and deployment process for current project is running on 
 ## Rollback
 When you deploy service at first time it creates the CloudWatch Event which allows to listen the for `Essential container in task exited` and sets an Alarm as a `Rollback Trigger` to current CFn stack. If the number of tasks exited tasks from updated task definition will be greater than 2 per 1 minute then rollback will be triggered.
 
+If you want to add another alarm to Rollback Triggers you need to add Alarm which was created to `Outputs` and it should contain `Alarm` word. Deployment script will update the CFn stack with a new Rollback Trigger
+
 ## Changes in source code
 It is obviously that you may want to make some changes in source code or other components. So, here are several things that you should know:
-- After you make a `git push` build will be trigered
-- If build is trigered from `master` branch it will also run a deploy process
+- After you make a `git push` build will be triggered
+- If build is triggered from `master` branch it will also run a deploy process
 - If you are changing files which are not affecting the application you may not need to run build. So, in order to make commit without build you need to run commit command with `[skip ci]` in message body, for example:
 ```
 git add README.md
