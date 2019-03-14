@@ -202,5 +202,5 @@ Outputs:
     Value: !GetAtt service.Name
   taskEssentialExitAlarm:
     Value: !GetAtt taskEssentialExitAlarm.Arn
-  taskFailedHealthCheck:
+  taskFailedHealthCheckAlarm:
     Value: !GetAtt taskFailedHealthCheckAlarm.Arn
