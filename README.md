@@ -18,10 +18,10 @@ In order to use current build and deployment process you need to have:
 ## Travis CI setup
 Continuous integration and deployment process for current project is running on Travis CI. 
 - In order to proceed with Travis CI go to https://travis-ci.org and [Sign Up](https://travis-ci.org "TravisCI") using your GitHub account
-- Now go to https://travis-ci.org/account/repositories and find `simple_random_app` and `simple_infrastructure`. Switch on checkboxes it will allow you to build the project with Travis CI
+- Now go to https://travis-ci.org/account/repositories and find `simple_random_app`. Switch on checkboxes it will allow you to build the project with Travis CI
 - Now go to the job and press `More options > Settings`
 - Here you need to add several environment variables like
-  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` of your who has access to `ecs*`, `cloudformation*` `ec2*`
+  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` of your who has access to `ecs*`, `cloudformation*`, `ec2*`, `cloudwatch*`
   - `AWS_DEFAULT_REGION` where you specify AWS region where your cluster is deployed
   - `dockerhub_account` and `dockerhub_password` - your dockerhub account credentials
   - `docker_repository` - your DockerHub repository where you are going to store built docker images
