@@ -121,7 +121,7 @@ Resources:
   taskEssentialExitEventRule:
     Type: "AWS::Events::Rule"
     Properties:
-      Name: simple-ecs-task-fail
+      Name: simple-ecs-task-essential-exit-rule
       Description: "Rule which keeps record of task exit events"
       EventPattern: !Sub 
         - | 
@@ -159,7 +159,7 @@ Resources:
   taskFailedHealthCheckEventRule:
     Type: "AWS::Events::Rule"
     Properties:
-      Name: simple-ecs-task-fail
+      Name: simple-ecs-task-failed-healthcheck-rule
       Description: "Rule which keeps record of task exit events"
       EventPattern: !Sub 
         - | 
