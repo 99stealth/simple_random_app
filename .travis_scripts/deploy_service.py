@@ -45,7 +45,7 @@ def follow_cfn_stack(client, stack_name, try_timeout):
                 return False
 
 def stack_operations(client, stack_name, template, try_timeout, docker_image_tag, dockerhub_repo_name, operation):
-    """Creates or updates CFn stack with received parameters"""
+    """ Creates or updates CFn stack with received parameters """
     if operation == "create":
         with open(template, 'r') as cfn_template:
             try:
@@ -118,7 +118,7 @@ def stack_operations(client, stack_name, template, try_timeout, docker_image_tag
 
 
 def get_arguments():
-    """ Gets parameters from command line"""
+    """ Gets parameters from command line """
     parser = ArgumentParser(description='Check stack exists')
     parser.add_argument('--stack-name', help='CFn stack name', required=True)
     parser.add_argument('--template', help='CloudFormation template', required=True)
