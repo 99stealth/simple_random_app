@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 
 
 def stack_exists(client, stack_name):
+    """ Checks that stack was specified is existing """
     cfn_stacks = client.list_stacks()
     for cfn_stack in cfn_stacks["StackSummaries"]:
         if cfn_stack['StackName'] == stack_name and "COMPLETE" in cfn_stack['StackStatus'] and "DELETE" not in cfn_stack['StackStatus']:
@@ -13,6 +14,7 @@ def stack_exists(client, stack_name):
     return False
 
 def find_alarm_in_output(client, stack_name):
+    """ Searches for resources in output that contain Alarm in Outputs Keys"""
     alarms_list = []
     outputs = client.describe_stacks(StackName=stack_name)['Stacks'][0]['Outputs']
     for output in outputs:
@@ -21,12 +23,14 @@ def find_alarm_in_output(client, stack_name):
     return alarms_list
 
 def generate_rollback_trigers(alarms):
+    """ Generates code structure for RollbackTrigger in RollbackConfiguration"""
     rollback_trigers = []
     for alarm in alarms:
         rollback_trigers.append({ 'Arn': alarm, 'Type': 'AWS::CloudWatch::Alarm' })
     return rollback_trigers
 
 def follow_cfn_stack(client, stack_name, try_timeout):
+    """ Listens for Success status while CFn stack is creating or updating"""
     while True:
         cfn_stacks = client.describe_stacks(StackName=stack_name)
         for stack in cfn_stacks["Stacks"]:
@@ -41,6 +45,7 @@ def follow_cfn_stack(client, stack_name, try_timeout):
                 return False
 
 def stack_operations(client, stack_name, template, try_timeout, docker_image_tag, dockerhub_repo_name, operation):
+    """Creates or updates CFn stack with received parameters"""
     if operation == "create":
         with open(template, 'r') as cfn_template:
             try:
@@ -111,7 +116,9 @@ def stack_operations(client, stack_name, template, try_timeout, docker_image_tag
         print("Unknown operation {0}".format(operation))
         exit(1)
 
+
 def get_arguments():
+    """ Gets parameters from command line"""
     parser = ArgumentParser(description='Check stack exists')
     parser.add_argument('--stack-name', help='CFn stack name', required=True)
     parser.add_argument('--template', help='CloudFormation template', required=True)
@@ -120,13 +127,28 @@ def get_arguments():
     parser.add_argument('--dockerhub-repo-name', help='Dockerhub repository name', required=True)
     return parser.parse_args()
 
+
 def main():
+    """ main function which receives arguments, calls AWS client and runs update or create CFn stack """
     args = get_arguments()
     client = boto3.client('cloudformation')
     if stack_exists(client, args.stack_name):
-        stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="update")
+        stack_operations(
+            client, args.stack_name, 
+            args.template, 
+            args.try_timeout, 
+            args.docker_image_tag, 
+            args.dockerhub_repo_name, 
+            operation="update")
     else:
-        stack_operations(client, args.stack_name, args.template, args.try_timeout, args.docker_image_tag, args.dockerhub_repo_name, operation="create")
+        stack_operations(
+            client, 
+            args.stack_name, 
+            args.template, 
+            args.try_timeout, 
+            args.docker_image_tag, 
+            args.dockerhub_repo_name, 
+            operation="create")
         
 
 if __name__ == "__main__":
