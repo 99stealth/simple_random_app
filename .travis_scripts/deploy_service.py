@@ -1,4 +1,5 @@
 #!python
+import sys
 from time import sleep
 import boto3
 from botocore.exceptions import ClientError
@@ -37,7 +38,7 @@ def follow_cfn_stack(client, stack_name, try_timeout):
             if "IN_PROGRESS" in stack["StackStatus"] and "ROLLBACK" not in stack["StackStatus"] and "DELETE" not in stack["StackStatus"]:
                 print ("Current stack status: {0}. Waiting {1} seconds".format(stack["StackStatus"], try_timeout))
                 sleep(try_timeout)
-            elif "COMPLETE" in stack["StackStatus"] and "DELETE" not in stack["StackStatus"]:
+            elif "COMPLETE" in stack["StackStatus"] and "DELETE" not in stack["StackStatus"] and "ROLLBACK" not in stack["StackStatus"]:
                 print ("Stack {0}".format(stack["StackStatus"]))
                 return True
             else:
@@ -65,7 +66,7 @@ def stack_operations(client, stack_name, template, try_timeout, docker_image_tag
             except ClientError as e:
                 print ("[Skipping stack create] {0}".format(e))
         if not follow_cfn_stack(client, stack_name, try_timeout):
-            exit(1)
+            sys.exit(1)
 
         alarms = find_alarm_in_output(client, stack_name)
         if alarms:
