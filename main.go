@@ -18,7 +18,7 @@ type RandomNumber struct {
 }
 
 func getHealthStatus(w http.ResponseWriter, r *http.Request) {
-	var version = "0.0.3"
+	var version = "0.0.4"
 	var status = "healthy"
 	var serviceName = "get-random-number"
 	healthCheck := map[string]string{
